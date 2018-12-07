@@ -1,11 +1,6 @@
 package com.ambientbeats;
 
-import android.content.Context;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.provider.Telephony;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -21,25 +16,24 @@ import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+
+import io.particle.android.sdk.cloud.ParticleCloud;
+import io.particle.android.sdk.cloud.ParticleCloudSDK;
+import io.particle.android.sdk.cloud.ParticleDevice;
+import io.particle.android.sdk.cloud.exceptions.ParticleCloudException;
+import io.particle.android.sdk.utils.Async;
+import io.particle.android.sdk.utils.Toaster;
+
+import static io.particle.android.sdk.utils.Py.list;
 
 public class MainActivity extends AppCompatActivity {
 
-    String currentDeviceId = "";
-    Map<String, String> deviceNameIds = new HashMap<String, String>();
+    ParticleDevice currentDevice = null;
+    List<ParticleDevice> particleDevices = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +66,11 @@ public class MainActivity extends AppCompatActivity {
         final Button powerOnButton = (Button) findViewById(R.id.powerOnButton);
         powerOnButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                powerOn(v);
+                try {
+                    powerOn(v);
+                } catch (ParticleCloudException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -122,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 // called after the user finishes moving the SeekBar
-                new ParticleFunction(getApplicationContext()).execute(currentDeviceId, "set-hue", String.valueOf(seekBar.getProgress()));
+                callCloudFunction("set-hue", list(String.valueOf(seekBar.getProgress())));
             }
         });
 
@@ -144,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 // called after the user finishes moving the SeekBar
-                new ParticleFunction(getApplicationContext()).execute(currentDeviceId, "set-brightness", String.valueOf(seekBar.getProgress()));
+                callCloudFunction("set-brightness", list(String.valueOf(seekBar.getProgress())));
             }
         });
 
@@ -166,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 // called after the user finishes moving the SeekBar
-                new ParticleFunction(getApplicationContext()).execute(currentDeviceId, "set-saturation", String.valueOf(seekBar.getProgress()));
+                callCloudFunction("set-saturation", list(String.valueOf(seekBar.getProgress())));
             }
         });
     }
@@ -194,151 +192,158 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void nextPattern(View view) {
-        new ParticleFunction(getApplicationContext()).execute(currentDeviceId, "next-animation");
+        callCloudFunction("next-animation");
     }
 
     private void previousPattern(View view) {
-        new ParticleFunction(getApplicationContext()).execute(currentDeviceId, "previous-animation");
+        callCloudFunction("previous-animation");
     }
 
     private void toggleAudioReactive(View view) {
-        new ParticleFunction(getApplicationContext()).execute(currentDeviceId, "toggle-audio-reactive");
+        callCloudFunction("toggle-audio-reactive");
     }
 
     private void cycleFrequency(View view) {
-        new ParticleFunction(getApplicationContext()).execute(currentDeviceId, "cycle-frequency");
+        callCloudFunction("cycle-frequency");
     }
 
-    private void powerOn(View view) {
-        new ParticleFunction(getApplicationContext()).execute(currentDeviceId, "power-on");
+    private void powerOn(View view) throws ParticleCloudException {
+        callCloudFunction("power-on");
     }
 
     private void powerOff(View view) {
-        new ParticleFunction(getApplicationContext()).execute(currentDeviceId, "power-off");
+        callCloudFunction("power-off");
     }
 
     private void enterSafeMode(View view) {
-        new ParticleFunction(getApplicationContext()).execute(currentDeviceId, "enter-safe-mode");
+        callCloudFunction("enter-safe-mode");
     }
 
     private void resetDevice(View view) {
-        new ParticleFunction(getApplicationContext()).execute(currentDeviceId, "reset-device");
+        callCloudFunction("reset-device");
     }
 
-    private void getDevices() {
-        new ParticleGetDevices().execute("This takes no params...");
+    private void callCloudFunction(String functionName) {
+        callCloudFunction(functionName, null);
     }
 
     private void powerOnAllDevices() {
-        for(String device : deviceNameIds.keySet()) {
-            new ParticleFunction(getApplicationContext()).execute(deviceNameIds.get(device), "power-on");
-        }
+//        for(String device : deviceNameIds.keySet()) {
+//            new ParticleFunction(getApplicationContext()).execute(deviceNameIds.get(device), "power-on");
+//        }
     }
 
     private void powerOffAllDevices() {
-        for(String device : deviceNameIds.keySet()) {
-            new ParticleFunction(getApplicationContext()).execute(deviceNameIds.get(device), "power-off");
+//        for(String device : deviceNameIds.keySet()) {
+//            new ParticleFunction(getApplicationContext()).execute(deviceNameIds.get(device), "power-off");
+//        }
+    }
+
+    private void updateSeekBarFromCloudVariable(String variableName, SeekBar seekbar, TextView textView, String textViewText) {
+        try {
+            Async.executeAsync(currentDevice, new Async.ApiWork<ParticleDevice, Integer>() {
+
+                public Integer callApi(ParticleDevice particleDevice) throws ParticleCloudException, IOException {
+                    try {
+                        return currentDevice.getIntVariable(variableName);
+                    } catch (ParticleDevice.VariableDoesNotExistException e) {
+                        e.printStackTrace();
+                    }
+
+                    return -1;
+                }
+
+                @Override
+                public void onSuccess(Integer value) {
+                    seekbar.setProgress(value);
+                    textView.setText(textViewText + ": " + value);
+                }
+
+                @Override
+                public void onFailure(ParticleCloudException e) {
+                    Log.e("some tag", "Something went wrong making an SDK call: ", e);
+                    Toaster.l(MainActivity.this, "Couldn't get cloud variable.");
+                }
+            });
+        } catch (ParticleCloudException e) {
+            Toaster.l(MainActivity.this, "A Particle exception occurred: " + e.getBestMessage());
+            e.printStackTrace();
         }
     }
 
-    public class ParticleGetDevices extends AsyncTask<String, Void, String> {
-        @Override
-        protected String doInBackground(String...urls) {
-            try {
-                URL url = new URL("https://api.particle.io/v1/devices?access_token=33758e91bd70b14d10de5eab575bd65416fac6a2");
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
+    private void callCloudFunction(String functionName, List<String> arguments) {
+        try {
+            Async.executeAsync(currentDevice, new Async.ApiWork<ParticleDevice, Integer>() {
 
-                if (connection.getResponseCode() != 200) {
-                    Log.i("Response message: ", connection.getResponseMessage());
-                    MainActivity.Toaster.get().showToast(getApplicationContext(), "Failed : HTTP error code : " + connection.getResponseCode() + " : " + connection.getResponseMessage() +"\n\n The device is probably offline. ", Toast.LENGTH_LONG);
+                public Integer callApi(ParticleDevice particleDevice) throws ParticleCloudException, IOException {
+                    try {
+                        return currentDevice.callFunction(functionName, arguments);
+                    } catch (ParticleDevice.FunctionDoesNotExistException e) {
+                        e.printStackTrace();
+                    }
+
+                    return 0;
                 }
 
-                BufferedReader br = new BufferedReader(new InputStreamReader(
-                        (connection.getInputStream())));
+                @Override
+                public void onSuccess(Integer value) { }
 
-                String output = null;
-                String toReturn = null;
-                while ((output = br.readLine()) != null) {
-                    toReturn = output;
+                @Override
+                public void onFailure(ParticleCloudException e) {
+                    Log.e("some tag", "Something went wrong making an SDK call: ", e);
+                    Toaster.l(MainActivity.this, "Couldn't call cloud function.");
                 }
-
-                connection.disconnect();
-                return toReturn;
-
-            } catch (MalformedURLException e) {
-                MainActivity.Toaster.get().showToast(getApplicationContext(), "Failed: " + e.getMessage(), Toast.LENGTH_SHORT);
-            } catch (IOException e) {
-                MainActivity.Toaster.get().showToast(getApplicationContext(), "Failed: " + e.getMessage(), Toast.LENGTH_SHORT);
-            }
-
-            return "balls to you, sir";
+            });
+        } catch (ParticleCloudException e) {
+            Toaster.l(MainActivity.this, "A Particle exception occurred: " + e.getBestMessage());
+            e.printStackTrace();
         }
+    }
 
-        @Override
-        protected void onPostExecute(String result) {
-            Spinner spinner = (Spinner) findViewById(R.id.deviceSpinner);
-            JSONArray devices = null;
-            try {
-                devices = new JSONArray(result);
-            } catch (JSONException e) {
-                e.printStackTrace();
+    private void getDevices() {
+        Async.executeAsync(ParticleCloudSDK.getCloud(), new Async.ApiWork<ParticleCloud, List<ParticleDevice>>() {
+            public List<ParticleDevice> callApi(ParticleCloud particleDevice) throws ParticleCloudException, IOException {
+                return ParticleCloudSDK.getCloud().getDevices();
             }
 
-            java.util.ArrayList<String> deviceNames = new java.util.ArrayList<>();
+            @Override
+            public void onSuccess(List<ParticleDevice> devices) {
+                List<String> deviceNames = new ArrayList<>();
+                for (ParticleDevice device : devices) {
+                    List<String> ignoreDevices = new ArrayList<>(); //TODO: init this  with the names
 
-            try {
-                //Iterate the jsonArray and print the info of JSONObjects
-                for(int i=0; i < devices.length(); i++){
-                    JSONObject jsonObject = devices.getJSONObject(i);
-
-                    String name = jsonObject.optString("name");
-
-                    if(name.equals("AudioServer") || name.equals("Bedroom") || name.equals("Remote")) {
+                    if (ignoreDevices.contains(device.getName())) {
                         continue;
                     }
 
-                    deviceNames.add(name);
-                    deviceNameIds.put(name, jsonObject.optString("id"));
+                    deviceNames.add(device.getName());
+                    particleDevices.add(device);
                 }
 
-                spinner.setAdapter(new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_spinner_dropdown_item, deviceNames));
-            } catch (JSONException e) {e.printStackTrace();}
+                Spinner spinner = findViewById(R.id.deviceSpinner);
+                spinner.setAdapter(new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_spinner_dropdown_item, deviceNames));
+                spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> arg0, View arg1, int position, long arg3) {
+                        currentDevice = particleDevices.stream().filter(item -> item.getName().equals(spinner.getSelectedItem())).findFirst().get();
 
-            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> arg0, View arg1, int position, long arg3) {
-                    Spinner localSpinner = (Spinner) findViewById(R.id.deviceSpinner);
-                    currentDeviceId = deviceNameIds.get(localSpinner.getItemAtPosition(localSpinner.getSelectedItemPosition()).toString());
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> arg0) {
-                    // TODO Auto-generated method stub
-                }
-            });
-
-        }
-    }
-
-    public enum Toaster {
-        INSTANCE;
-
-        private final Handler handler = new Handler(Looper.getMainLooper());
-
-        public void showToast(final Context context, final String message, final int length) {
-            handler.post(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(context, message, length).show();
-                        }
+                        updateSeekBarFromCloudVariable("hue", findViewById(R.id.hueSeekBar), findViewById(R.id.hueTextView), "Hue");
+                        updateSeekBarFromCloudVariable("brightness", findViewById(R.id.brightnessSeekBar), findViewById(R.id.brightnessTextView), "Brightness");
+                        updateSeekBarFromCloudVariable("saturation", findViewById(R.id.saturationSeekBar), findViewById(R.id.saturationTextView), "Saturation");
                     }
-            );
-        }
 
-        public static Toaster get() {
-            return INSTANCE;
-        }
+                    @Override
+                    public void onNothingSelected(AdapterView<?> arg0) {
+                        // TODO Auto-generated method stub
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(ParticleCloudException e) {
+                Log.e("some tag", "Something went wrong making an SDK call: ", e);
+                Toaster.s(MainActivity.this, "Couldn't access your devices!");
+            }
+        });
     }
 }
