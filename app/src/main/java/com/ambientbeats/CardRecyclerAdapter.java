@@ -218,9 +218,9 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
                 try {
                     result = new ParticleRequest().getVariable(strings[0], strings[1], strings[2]);
                 } catch (IOException e) {
-                    Log.e("UpdatePowerState", "Something went wrong making an SDK call: ", e);
+                    Log.e("UpdatePowerState", "Something went wrong making an SDK call");
                 } catch (JSONException e) {
-                    Log.e("UpdatePowerState", "Something went wrong making an SDK call: ", e);
+                    Log.e("UpdatePowerState", "Something went wrong making an SDK call");
                 }
                 return result;
             }
@@ -242,9 +242,9 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
                 try {
                     result = new ParticleRequest().getVariable(strings[0], strings[1], strings[2]);
                 } catch (IOException e) {
-                    Log.e("UpdateAudioReactive", "Something went wrong making an SDK call: ", e);
+                    Log.e("UpdateAudioReactive", "Something went wrong making an SDK call: ");
                 } catch (JSONException e) {
-                    Log.e("UpdateAudioReactive", "Something went wrong making an SDK call: ", e);
+                    Log.e("UpdateAudioReactive", "Something went wrong making an SDK call: ");
                 }
                 return result;
             }
@@ -276,11 +276,11 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
     private void setActionButtonListeners(DeviceCardViewHolder holder, int position) {
         ParticleDevice particleDevice = particleDevices.get(position);
         holder.nextAnimationButton.setOnClickListener(v ->
-                particleCloud.callCloudFunction(particleDevice, "next-animation", null)
+                particleCloud.callCloudFunction(particleDevice, "change-animation", list("NEXT"))
         );
 
         holder.previousAnimationButton.setOnClickListener(v ->
-                particleCloud.callCloudFunction(particleDevice, "previous-animation", null)
+                particleCloud.callCloudFunction(particleDevice, "change-animation", list("PREVIOUS"))
         );
 
         holder.toggleAudioReactiveButton.setOnClickListener(v -> {
@@ -306,9 +306,9 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
         holder.powerSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Log.i("POWER", "Device: " + particleDevice.getName() + " is being set to: " + String.valueOf(isChecked));
             if (isChecked) {
-                particleCloud.callCloudFunction(particleDevice, "power-on", null);
+                particleCloud.callCloudFunction(particleDevice, "power", list("ON"));
             } else {
-                particleCloud.callCloudFunction(particleDevice, "power-off", null);
+                particleCloud.callCloudFunction(particleDevice, "power", list("OFF"));
             }
         });
     }

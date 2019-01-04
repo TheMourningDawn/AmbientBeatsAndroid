@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         Async.executeAsync(ParticleCloudSDK.getCloud(), new Async.ApiProcedure<ParticleCloud>() {
             @Override
             public Void callApi(ParticleCloud particleCloud) throws ParticleCloudException {
-                particleCloud.publishEvent("POWER", "POWER_ON", ParticleEventVisibility.PRIVATE, 60);
+                particleCloud.publishEvent("POWER_ON", "POWER_ON", ParticleEventVisibility.PRIVATE, 60);
                 return null;
             }
 
@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
         Async.executeAsync(ParticleCloudSDK.getCloud(), new Async.ApiProcedure<ParticleCloud>() {
             @Override
             public Void callApi(ParticleCloud particleCloud) throws ParticleCloudException {
-                particleCloud.publishEvent("POWER", "POWER_OFF", ParticleEventVisibility.PRIVATE, 60);
+                particleCloud.publishEvent("POWER_OFF", "POWER_OFF", ParticleEventVisibility.PRIVATE, 60);
                 return null;
             }
 
