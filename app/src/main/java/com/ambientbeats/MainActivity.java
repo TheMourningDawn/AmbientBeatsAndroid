@@ -25,8 +25,9 @@ import io.particle.android.sdk.utils.Toaster;
 
 public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
-    private RecyclerView.Adapter recyclerViewAdapter;
+    private CardRecyclerAdapter recyclerViewAdapter;
     private RecyclerView.LayoutManager layoutManager;
+    private Switch powerAllSwitch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +44,8 @@ public class MainActivity extends AppCompatActivity {
 
         MenuItem menuItem = menu.findItem(R.id.actionBarMenu);
         View view = MenuItemCompat.getActionView(menuItem);
-        Switch powerAllSwitch = view.findViewById(R.id.switchForActionBar);
+        powerAllSwitch = view.findViewById(R.id.switchForActionBar);
+
         powerAllSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Log.i("PowerAll", String.valueOf(isChecked));
             if (isChecked) {
@@ -133,6 +135,9 @@ public class MainActivity extends AppCompatActivity {
                 // specify an adapter (see also next example)
                 recyclerViewAdapter = new CardRecyclerAdapter(particleDevices);
                 recyclerView.setAdapter(recyclerViewAdapter);
+
+
+                powerAllSwitch.setChecked(recyclerViewAdapter.getAnyDeviceOn());
             }
 
             @Override

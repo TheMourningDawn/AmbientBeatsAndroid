@@ -5,13 +5,14 @@ import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.Switch;
-import android.widget.TableRow;
+import android.widget.TableLayout;
 import android.widget.TextView;
 
 import org.json.JSONException;
@@ -28,6 +29,7 @@ import static io.particle.android.sdk.utils.Py.list;
 public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapter.DeviceCardViewHolder> {
     private List<ParticleDevice> particleDevices;
     private ParticleCloud particleCloud = new ParticleCloud();
+    private boolean anyDeviceOn = false;
 
     public static class DeviceCardViewHolder extends RecyclerView.ViewHolder {
         CardView deviceCardView;
@@ -42,7 +44,12 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
         public SeekBar saturationSeekBar;
         public TextView saturationTextView;
 
-        public TableRow deviceManagementTableRow;
+        public SeekBar animationSpeedSeekBar;
+        public TextView animationSpeedTextView;
+        public SeekBar audioSensitivitySeekBar;
+        public TextView audioSensitivityTextView;
+
+        public TableLayout deviceManagementTableLayout;
         public ImageButton deviceManagementShowHideButton;
 
         public ImageButton nextAnimationButton;
@@ -64,7 +71,12 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
             saturationSeekBar = v.findViewById(R.id.saturationSeekBar);
             saturationTextView = v.findViewById(R.id.saturationTextView);
 
-            deviceManagementTableRow = v.findViewById(R.id.deviceManagementTableRow);
+            animationSpeedSeekBar = v.findViewById(R.id.animationSpeedSeekBar);
+            animationSpeedTextView = v.findViewById(R.id.animationSpeedTextView);
+            audioSensitivitySeekBar = v.findViewById(R.id.audioSensitivitySeekBar);
+            audioSensitivityTextView = v.findViewById(R.id.audioSensitivityTextView);
+
+            deviceManagementTableLayout = v.findViewById(R.id.deviceManagementTableLayout);
             deviceManagementShowHideButton = v.findViewById(R.id.settingsExpandButton);
 
             nextAnimationButton = v.findViewById(R.id.nextAnimationButton);
@@ -90,7 +102,7 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
     @Override
     public void onBindViewHolder(DeviceCardViewHolder holder, int position) {
         holder.deviceNameTextView.setText(particleDevices.get(position).getName());
-        holder.deviceManagementTableRow.setVisibility(View.GONE);
+        holder.deviceManagementTableLayout.setVisibility(View.GONE);
 
         updatePowerStateFromCloudVariable(holder, position);
         updateAudioReactiveFromCloudVariable(holder, position);
@@ -98,6 +110,9 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
         setHueSeekBarListener(holder, position);
         setBrightnessSeekBarListener(holder, position);
         setSaturationSeekBarListener(holder, position);
+
+        setAudioSensitivitySeekBarListener(holder, position);
+        setAnimationSpeedSeekBarListener(holder, position);
 
         setSettingsExpandButtonListener(holder, position);
 
@@ -107,11 +122,18 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
         updateSeekBarFromCloudVariable(holder, position, "hue", holder.hueSeekBar, holder.hueTextView, "Hue");
         updateSeekBarFromCloudVariable(holder, position, "brightness", holder.brightnessSeekBar, holder.brightnessTextView, "Brightness");
         updateSeekBarFromCloudVariable(holder, position, "saturation", holder.saturationSeekBar, holder.saturationTextView, "Saturation");
+        updateSeekBarFromCloudVariable(holder, position, "speed", holder.animationSpeedSeekBar, holder.animationSpeedTextView, "Animation Speed");
+        updateSeekBarFromCloudVariable(holder, position, "sensitivity", holder.audioSensitivitySeekBar, holder.audioSensitivityTextView, "Audio Sensitivity");
     }
 
     @Override
     public int getItemCount() {
         return particleDevices.size();
+    }
+
+    public boolean getAnyDeviceOn() {
+
+        return anyDeviceOn;
     }
 
     private void setHueSeekBarListener(DeviceCardViewHolder holder, int position) {
@@ -179,6 +201,50 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
         });
     }
 
+    private void setAnimationSpeedSeekBarListener(DeviceCardViewHolder holder, int position) {
+        holder.animationSpeedSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                // updated continuously as the user slides the thumb
+                holder.animationSpeedTextView.setText("Animation Speed: " + progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // called when the user first touches the SeekBar
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // called after the user finishes moving the SeekBar
+                particleCloud.callCloudFunction(particleDevices.get(position),"set-speed", list(String.valueOf(seekBar.getProgress())));
+            }
+        });
+    }
+
+    private void setAudioSensitivitySeekBarListener(DeviceCardViewHolder holder, int position) {
+        holder.audioSensitivitySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                // updated continuously as the user slides the thumb
+                holder.audioSensitivityTextView.setText("Audio Sensitivity: " + progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // called when the user first touches the SeekBar
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // called after the user finishes moving the SeekBar
+                particleCloud.callCloudFunction(particleDevices.get(position),"set-sensitivity", list(String.valueOf(seekBar.getProgress())));
+            }
+        });
+    }
+
     private void updateSeekBarFromCloudVariable(DeviceCardViewHolder holder, int position, String variableName, SeekBar seekbar, TextView textView, String textViewText) {
         try {
             Async.executeAsync(particleDevices.get(position), new Async.ApiWork<ParticleDevice, Integer>() {
@@ -229,6 +295,9 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
             protected void onPostExecute(Boolean result) {
                 super.onPostExecute(result);
                 holder.powerSwitch.setChecked(result);
+                if(result) {
+                    anyDeviceOn = true;
+                }
             }
         }.execute("33758e91bd70b14d10de5eab575bd65416fac6a2", particleDevices.get(position).getID(), "powered-on");
     }
@@ -263,11 +332,11 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
 
     private void setSettingsExpandButtonListener(DeviceCardViewHolder holder, int position) {
         holder.deviceManagementShowHideButton.setOnClickListener(v -> {
-            if(holder.deviceManagementTableRow.getVisibility() == View.VISIBLE) {
-                holder.deviceManagementTableRow.setVisibility(View.GONE);
+            if(holder.deviceManagementTableLayout.getVisibility() == View.VISIBLE) {
+                holder.deviceManagementTableLayout.setVisibility(View.GONE);
                 holder.deviceManagementShowHideButton.setImageResource(R.drawable.ic_expand_more_black_24dp);
             } else {
-                holder.deviceManagementTableRow.setVisibility(View.VISIBLE);
+                holder.deviceManagementTableLayout.setVisibility(View.VISIBLE);
                 holder.deviceManagementShowHideButton.setImageResource(R.drawable.ic_expand_less_black_24dp);
             }
         });
