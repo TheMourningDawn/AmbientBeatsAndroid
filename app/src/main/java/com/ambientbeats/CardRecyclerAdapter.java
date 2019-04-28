@@ -1,11 +1,11 @@
 package com.ambientbeats;
 
 import android.os.AsyncTask;
+import android.support.v4.graphics.ColorUtils;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -14,6 +14,9 @@ import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TableLayout;
 import android.widget.TextView;
+
+import com.larswerkman.holocolorpicker.ColorPicker;
+import com.larswerkman.holocolorpicker.ValueBar;
 
 import org.json.JSONException;
 
@@ -37,13 +40,6 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
 
         public Switch powerSwitch;
 
-        public SeekBar hueSeekBar;
-        public TextView hueTextView;
-        public SeekBar brightnessSeekBar;
-        public TextView brightnessTextView;
-        public SeekBar saturationSeekBar;
-        public TextView saturationTextView;
-
         public SeekBar animationSpeedSeekBar;
         public TextView animationSpeedTextView;
         public SeekBar audioSensitivitySeekBar;
@@ -56,20 +52,23 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
         public ImageButton previousAnimationButton;
         public ImageButton toggleAudioReactiveButton;
         public ImageButton cycleFrequencyButton;
+
         public Button resetButton;
         public Button enterSafeModeButton;
+
+        int previousHue = 0;
+        int previousBrightness = 0;
+        int previousSaturation = 0;
+        int previousColor = 0;
+
+        ColorPicker colorPicker;
+        ValueBar brightnessValueBar;
 
         private DeviceCardViewHolder(View v) {
             super(v);
             powerSwitch = v.findViewById(R.id.powerSwitch);
             deviceCardView = v.findViewById(R.id.card_view);
             deviceNameTextView = v.findViewById(R.id.device_name_textview);
-            hueSeekBar = v.findViewById(R.id.hueSeekBar);
-            hueTextView = v.findViewById(R.id.hueTextView);
-            brightnessSeekBar = v.findViewById(R.id.brightnessSeekBar);
-            brightnessTextView = v.findViewById(R.id.brightnessTextView);
-            saturationSeekBar = v.findViewById(R.id.saturationSeekBar);
-            saturationTextView = v.findViewById(R.id.saturationTextView);
 
             animationSpeedSeekBar = v.findViewById(R.id.animationSpeedSeekBar);
             animationSpeedTextView = v.findViewById(R.id.animationSpeedTextView);
@@ -85,6 +84,11 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
             cycleFrequencyButton = v.findViewById(R.id.cycleFrequencyButton);
             resetButton = v.findViewById(R.id.resetButton);
             enterSafeModeButton = v.findViewById(R.id.enterSafeModeButton);
+
+            colorPicker = (ColorPicker) v.findViewById(R.id.picker);
+            brightnessValueBar = (ValueBar) v.findViewById(R.id.valuebar);
+
+            colorPicker.addValueBar(brightnessValueBar);
         }
     }
 
@@ -107,10 +111,6 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
         updatePowerStateFromCloudVariable(holder, position);
         updateAudioReactiveFromCloudVariable(holder, position);
 
-        setHueSeekBarListener(holder, position);
-        setBrightnessSeekBarListener(holder, position);
-        setSaturationSeekBarListener(holder, position);
-
         setAudioSensitivitySeekBarListener(holder, position);
         setAnimationSpeedSeekBarListener(holder, position);
 
@@ -119,11 +119,44 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
         setActionButtonListeners(holder, position);
         setPowerSwitchListener(holder, position);
 
-        updateSeekBarFromCloudVariable(holder, position, "hue", holder.hueSeekBar, holder.hueTextView, "Hue");
-        updateSeekBarFromCloudVariable(holder, position, "brightness", holder.brightnessSeekBar, holder.brightnessTextView, "Brightness");
-        updateSeekBarFromCloudVariable(holder, position, "saturation", holder.saturationSeekBar, holder.saturationTextView, "Saturation");
+        setColorPickerListener(holder, position);
+
+        updateColorFromCloudVariable(holder, position);
         updateSeekBarFromCloudVariable(holder, position, "speed", holder.animationSpeedSeekBar, holder.animationSpeedTextView, "Animation Speed");
         updateSeekBarFromCloudVariable(holder, position, "sensitivity", holder.audioSensitivitySeekBar, holder.audioSensitivityTextView, "Audio Sensitivity");
+    }
+
+    private void setColorPickerListener(DeviceCardViewHolder holder, int position) {
+        holder.colorPicker.setOnColorSelectedListener(new ColorPicker.OnColorSelectedListener() {
+            @Override
+            public void onColorSelected(int color) {
+                updateDeviceColor(color, holder, position);
+            }
+        });
+    }
+
+    private void updateDeviceColor(int color, DeviceCardViewHolder holder, int position) {
+        float[] hsl = new float[3];
+        ColorUtils.colorToHSL(color, hsl);
+        int hue = mapRangeTo255(hsl[0], 0, 360);
+        int saturation = mapRangeTo255(hsl[1], 0, 1);
+        int brightness = 2 * mapRangeTo255(hsl[2], 0, 1) - 1;
+
+        if(hue != holder.previousHue) {
+            particleCloud.callCloudFunction(particleDevices.get(position), "set-hue", list(String.valueOf(hue)));
+        }
+        if(brightness != holder.previousBrightness) {
+            particleCloud.callCloudFunction(particleDevices.get(position),"set-brightness", list(String.valueOf(brightness)));
+        }
+        if(saturation != holder.previousSaturation) {
+            particleCloud.callCloudFunction(particleDevices.get(position),"set-saturation", list(String.valueOf(saturation)));
+        }
+
+        holder.previousHue = hue;
+        holder.previousBrightness = brightness;
+        holder.previousSaturation = saturation;
+        holder.colorPicker.setOldCenterColor(holder.previousColor);
+        holder.previousColor = color;
     }
 
     @Override
@@ -132,73 +165,15 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
     }
 
     public boolean getAnyDeviceOn() {
-
         return anyDeviceOn;
     }
 
-    private void setHueSeekBarListener(DeviceCardViewHolder holder, int position) {
-        holder.hueSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                // updated continuously as the user slides the thumb
-                holder.hueTextView.setText("Hue: " + progress);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                // called when the user first touches the SeekBar
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                // called after the user finishes moving the SeekBar
-                particleCloud.callCloudFunction(particleDevices.get(position), "set-hue", list(String.valueOf(seekBar.getProgress())));
-            }
-        });
+    private int mapRangeTo255(double number, double rangeStart, double rangeEnd) {
+        return Math.round(Math.round(map(number, rangeStart, rangeEnd, 0, 255)));
     }
 
-    private void setBrightnessSeekBarListener(DeviceCardViewHolder holder, int position) {
-        holder.brightnessSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                // updated continuously as the user slides the thumb
-                holder.brightnessTextView.setText("Brightness: " + progress);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                // called when the user first touches the SeekBar
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                // called after the user finishes moving the SeekBar
-                particleCloud.callCloudFunction(particleDevices.get(position),"set-brightness", list(String.valueOf(seekBar.getProgress())));
-            }
-        });
-    }
-
-    private void setSaturationSeekBarListener(DeviceCardViewHolder holder, int position) {
-        holder.saturationSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                // updated continuously as the user slides the thumb
-                holder.saturationTextView.setText("Saturation: " + progress);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                // called when the user first touches the SeekBar
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                // called after the user finishes moving the SeekBar
-                particleCloud.callCloudFunction(particleDevices.get(position),"set-saturation", list(String.valueOf(seekBar.getProgress())));
-            }
-        });
+    private double map(double number, double fromRangeStart, double fromRangeEnd, double toRangeStart, double toRangeEnd) {
+        return (number - fromRangeStart)/(fromRangeEnd - fromRangeStart) * (toRangeEnd - toRangeStart) + toRangeStart;
     }
 
     private void setAnimationSpeedSeekBarListener(DeviceCardViewHolder holder, int position) {
@@ -263,6 +238,45 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
                 public void onSuccess(Integer value) {
                     seekbar.setProgress(value);
                     textView.setText(textViewText + ": " + value);
+                }
+
+                @Override
+                public void onFailure(ParticleCloudException e) {
+                    Log.e("UpdateSeekBar", "Something went wrong making an SDK call: ", e);
+                }
+            });
+        } catch (ParticleCloudException e) {
+            Log.e("UpdateSeekBar", "Something went wrong making an SDK call: ", e);
+        }
+    }
+
+
+    private void updateColorFromCloudVariable(DeviceCardViewHolder holder, int position) {
+        try {
+            Async.executeAsync(particleDevices.get(position), new Async.ApiWork<ParticleDevice, Integer>() {
+
+                public Integer callApi(ParticleDevice particleDevice) throws ParticleCloudException, IOException {
+                    try {
+                        int hue = particleDevice.getIntVariable("hue");
+                        int brightness = particleDevice.getIntVariable("brightness");
+                        int saturation = particleDevice.getIntVariable("saturation");
+
+                        float newHue = (float) map(hue, 0, 255, 0, 360);
+                        float newBrightness = (float) map((float)(brightness/2), 0, 255, 0, 1);
+                        float newSaturation = (float) map(saturation, 0, 255, 0, 1);
+
+                        float[] hsl = {newHue, newSaturation, newBrightness};
+                        return ColorUtils.HSLToColor(hsl);
+                    } catch (ParticleDevice.VariableDoesNotExistException e) {
+                        e.printStackTrace();
+                    }
+
+                    return -1;
+                }
+
+                @Override
+                public void onSuccess(Integer value) {
+                    holder.colorPicker.setColor(value);
                 }
 
                 @Override

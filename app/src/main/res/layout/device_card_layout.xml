@@ -6,12 +6,11 @@
     android:layout_height="wrap_content"
     android:animateLayoutChanges="true">
     <!-- A CardView that contains a TextView -->
-    <android.support.v7.widget.CardView xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    <android.support.v7.widget.CardView
         android:id="@+id/card_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:clickable="true"
         card_view:cardCornerRadius="10dp"
         card_view:cardElevation="5dp"
         card_view:cardMaxElevation="5dp"
@@ -58,44 +57,46 @@
             </TableRow>
 
             <TableLayout
-                android:id="@+id/controlTableLayout"
-                android:layout_width="320dp"
-                android:layout_height="wrap_content"
+                android:id="@+id/deviceControlTableLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
                 android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                card_view:layout_constraintEnd_toEndOf="parent"
                 card_view:layout_constraintStart_toStartOf="parent"
                 card_view:layout_constraintTop_toBottomOf="@+id/deviceNameTableRow">
 
                 <TableRow
+                    android:id="@+id/colorPickerTableRow"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="8dp"
+                    card_view:layout_constraintStart_toStartOf="parent"
+                    card_view:layout_constraintTop_toBottomOf="@+id/deviceNameTableRow">
 
-                    <android.support.constraint.ConstraintLayout
+                    <com.larswerkman.holocolorpicker.ColorPicker
+                        android:id="@+id/picker"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:animateLayoutChanges="true">
+                        android:layout_marginEnd="8dp"
+                        card_view:layout_constraintEnd_toEndOf="parent"
+                        card_view:layout_constraintTop_toBottomOf="parent" />
 
-                        <SeekBar
-                            android:id="@+id/hueSeekBar"
-                            android:layout_width="300dp"
-                            android:layout_height="35dp"
-                            android:layout_marginStart="8dp"
-                            android:max="255"
-                            android:progress="255"
-                            app:layout_constraintStart_toStartOf="parent"
-                            card_view:layout_constraintTop_toBottomOf="@+id/hueTextView" />
+                </TableRow>
 
-                        <TextView
-                            android:id="@+id/hueTextView"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="24dp"
-                            android:layout_marginTop="8dp"
-                            android:text="Hue"
-                            app:layout_constraintStart_toStartOf="parent"
-                            card_view:layout_constraintTop_toTopOf="parent" />
+                <TableRow
+                    android:id="@+id/BrightnessTableRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    card_view:layout_constraintStart_toStartOf="parent"
+                    card_view:layout_constraintTop_toBottomOf="@+id/colorPickerTableRow">
 
-                    </android.support.constraint.ConstraintLayout>
-
+                    <com.larswerkman.holocolorpicker.ValueBar
+                        android:id="@+id/valuebar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        card_view:layout_constraintStart_toStartOf="parent"
+                        tools:layout_editor_absoluteY="71dp" />
                 </TableRow>
 
                 <TableRow
@@ -104,78 +105,60 @@
 
                     <android.support.constraint.ConstraintLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:animateLayoutChanges="true">
+                        android:layout_height="match_parent">
 
-                        <SeekBar
-                            android:id="@+id/brightnessSeekBar"
-                            android:layout_width="300dp"
-                            android:layout_height="35dp"
-                            android:layout_marginStart="8dp"
-                            android:max="255"
-                            android:progress="255"
-                            app:layout_constraintStart_toStartOf="parent"
-                            card_view:layout_constraintTop_toBottomOf="@+id/brightnessTextView" />
+                        <ImageButton
+                            android:id="@+id/nextAnimationButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginTop="8dp"
+                            card_view:layout_constraintStart_toEndOf="@+id/previousAnimationButton"
+                            card_view:layout_constraintTop_toTopOf="parent"
+                            card_view:srcCompat="@drawable/ic_arrow_upward_black_24dp" />
 
-                        <TextView
-                            android:id="@+id/brightnessTextView"
+                        <ImageButton
+                            android:id="@+id/toggleAudioReactiveButton"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="24dp"
                             android:layout_marginTop="8dp"
-                            android:text="Brightness"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/brightnessSeekBar"
-                            card_view:layout_constraintTop_toTopOf="parent" />
+                            card_view:layout_constraintStart_toStartOf="parent"
+                            card_view:layout_constraintTop_toTopOf="parent"
+                            card_view:srcCompat="@drawable/ic_volume_up_black_24dp" />
 
-                    </android.support.constraint.ConstraintLayout>
-
-                </TableRow>
-
-                <TableRow
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-
-                    <android.support.constraint.ConstraintLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:animateLayoutChanges="true">
-
-                        <SeekBar
-                            android:id="@+id/saturationSeekBar"
-                            android:layout_width="300dp"
-                            android:layout_height="35dp"
-                            android:layout_marginStart="8dp"
-                            android:max="255"
-                            android:progress="255"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/saturationTextView" />
-
-                        <TextView
-                            android:id="@+id/saturationTextView"
+                        <ImageButton
+                            android:id="@+id/cycleFrequencyButton"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="24dp"
-                            android:layout_marginTop="-1dp"
-                            android:text="Saturation"
-                            app:layout_constraintStart_toStartOf="parent"/>
+                            android:layout_marginStart="16dp"
+                            android:layout_marginTop="8dp"
+                            card_view:layout_constraintStart_toEndOf="@+id/toggleAudioReactiveButton"
+                            card_view:layout_constraintTop_toTopOf="parent"
+                            card_view:srcCompat="@drawable/ic_leak_add_black_24dp" />
 
+                        <ImageButton
+                            android:id="@+id/previousAnimationButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginTop="8dp"
+                            card_view:layout_constraintStart_toEndOf="@+id/cycleFrequencyButton"
+                            card_view:layout_constraintTop_toTopOf="parent"
+                            card_view:srcCompat="@drawable/ic_arrow_downward_black_24dp" />
                     </android.support.constraint.ConstraintLayout>
 
                 </TableRow>
+
 
             </TableLayout>
 
             <TableLayout
                 android:id="@+id/deviceManagementTableLayout"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginStart="8dp"
+                android:layout_height="180dp"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                card_view:layout_constraintEnd_toEndOf="parent"
-                card_view:layout_constraintStart_toStartOf="parent"
-                card_view:layout_constraintTop_toBottomOf="@+id/controlTableLayout">
+                card_view:layout_constraintTop_toBottomOf="@+id/deviceControlTableLayout">
 
                 <TableRow
                     android:id="@+id/audioSensitivityTableRow"
@@ -185,13 +168,14 @@
                     <android.support.constraint.ConstraintLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
+                        android:layout_weight="1"
                         android:animateLayoutChanges="true">
 
                         <SeekBar
                             android:id="@+id/audioSensitivitySeekBar"
                             android:layout_width="365dp"
                             android:layout_height="35dp"
-                            android:layout_marginStart="8dp"
+                            android:layout_marginStart="16dp"
                             android:max="1200"
                             android:progress="720"
                             app:layout_constraintStart_toStartOf="parent"
@@ -201,7 +185,7 @@
                             android:id="@+id/audioSensitivityTextView"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="24dp"
+                            android:layout_marginStart="32dp"
                             android:layout_marginTop="8dp"
                             android:text="Audio Sensitivity"
                             app:layout_constraintStart_toStartOf="parent"
@@ -219,13 +203,14 @@
                     <android.support.constraint.ConstraintLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
+                        android:layout_weight="1"
                         android:animateLayoutChanges="true">
 
                         <SeekBar
                             android:id="@+id/animationSpeedSeekBar"
                             android:layout_width="365dp"
                             android:layout_height="35dp"
-                            android:layout_marginStart="8dp"
+                            android:layout_marginStart="16dp"
                             android:max="255"
                             android:progress="255"
                             app:layout_constraintStart_toStartOf="parent"
@@ -235,7 +220,7 @@
                             android:id="@+id/animationSpeedTextView"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="24dp"
+                            android:layout_marginStart="32dp"
                             android:layout_marginTop="8dp"
                             android:text="Animation Speed"
                             app:layout_constraintStart_toStartOf="parent"
@@ -252,19 +237,20 @@
                     android:visibility="visible"
                     card_view:layout_constraintBottom_toBottomOf="parent"
                     card_view:layout_constraintStart_toStartOf="parent"
-                    card_view:layout_constraintTop_toBottomOf="@+id/controlTableLayout"
                     card_view:layout_constraintVertical_bias="0.120000005">
 
                     <android.support.constraint.ConstraintLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent">
+                        android:layout_height="match_parent"
+                        android:layout_weight="1">
 
                         <android.support.constraint.Guideline
                             android:id="@+id/guideline"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            card_view:layout_constraintGuide_percent="0.5" />
+                            card_view:layout_constraintGuide_percent="0.5"
+                            card_view:layout_constraintStart_toStartOf="parent" />
 
                         <Button
                             android:id="@+id/enterSafeModeButton"
@@ -289,7 +275,6 @@
                             card_view:layout_constraintBottom_toBottomOf="parent"
                             card_view:layout_constraintStart_toStartOf="@+id/guideline"
                             card_view:layout_constraintTop_toTopOf="parent" />
-
                     </android.support.constraint.ConstraintLayout>
 
                 </TableRow>
@@ -299,7 +284,7 @@
             <TableRow
                 android:id="@+id/expandTableRow"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="30dp"
                 card_view:layout_constraintStart_toStartOf="parent"
                 card_view:layout_constraintTop_toBottomOf="@+id/deviceManagementTableLayout">
 
@@ -332,42 +317,6 @@
                 </android.support.constraint.ConstraintLayout>
             </TableRow>
 
-            <ImageButton
-                android:id="@+id/nextAnimationButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="16dp"
-                card_view:layout_constraintStart_toEndOf="@+id/controlTableLayout"
-                card_view:layout_constraintTop_toBottomOf="@+id/deviceNameTableRow"
-                card_view:srcCompat="@drawable/ic_arrow_upward_black_24dp" />
-
-            <ImageButton
-                android:id="@+id/previousAnimationButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                card_view:layout_constraintStart_toEndOf="@+id/controlTableLayout"
-                card_view:layout_constraintTop_toBottomOf="@+id/nextAnimationButton"
-                card_view:srcCompat="@drawable/ic_arrow_downward_black_24dp" />
-
-            <ImageButton
-                android:id="@+id/toggleAudioReactiveButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                card_view:layout_constraintStart_toEndOf="@+id/controlTableLayout"
-                card_view:layout_constraintTop_toBottomOf="@+id/previousAnimationButton"
-                card_view:srcCompat="@drawable/ic_volume_up_black_24dp" />
-
-            <ImageButton
-                android:id="@+id/cycleFrequencyButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                card_view:layout_constraintStart_toEndOf="@+id/controlTableLayout"
-                card_view:layout_constraintTop_toBottomOf="@+id/toggleAudioReactiveButton"
-                card_view:srcCompat="@drawable/ic_leak_add_black_24dp" />
         </android.support.constraint.ConstraintLayout>
 
 
