@@ -1,1 +1,2 @@
-include ':app'
+include ':app', ':HoloColorPicker'
+project(':HoloColorPicker').projectDir = new File('libs/HoloColorPicker/library')

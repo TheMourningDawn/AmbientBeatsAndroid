@@ -126,11 +126,35 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
         updateSeekBarFromCloudVariable(holder, position, "sensitivity", holder.audioSensitivitySeekBar, holder.audioSensitivityTextView, "Audio Sensitivity");
     }
 
+    @Override
+    public int getItemCount() {
+        return particleDevices.size();
+    }
+
+    public boolean getAnyDeviceOn() {
+        return anyDeviceOn;
+    }
+
+    private int mapRangeTo255(double number, double rangeStart, double rangeEnd) {
+        return Math.round(Math.round(map(number, rangeStart, rangeEnd, 0, 255)));
+    }
+
+    private double map(double number, double fromRangeStart, double fromRangeEnd, double toRangeStart, double toRangeEnd) {
+        return (number - fromRangeStart)/(fromRangeEnd - fromRangeStart) * (toRangeEnd - toRangeStart) + toRangeStart;
+    }
+
     private void setColorPickerListener(DeviceCardViewHolder holder, int position) {
         holder.colorPicker.setOnColorSelectedListener(new ColorPicker.OnColorSelectedListener() {
             @Override
             public void onColorSelected(int color) {
                 updateDeviceColor(color, holder, position);
+            }
+        });
+
+        holder.brightnessValueBar.setOnValueSelectedListener(new ValueBar.OnValueSelectedListener() {
+            @Override
+            public void onValueSelected(int value) {
+                updateDeviceColor(value, holder, position);
             }
         });
     }
@@ -157,23 +181,6 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
         holder.previousSaturation = saturation;
         holder.colorPicker.setOldCenterColor(holder.previousColor);
         holder.previousColor = color;
-    }
-
-    @Override
-    public int getItemCount() {
-        return particleDevices.size();
-    }
-
-    public boolean getAnyDeviceOn() {
-        return anyDeviceOn;
-    }
-
-    private int mapRangeTo255(double number, double rangeStart, double rangeEnd) {
-        return Math.round(Math.round(map(number, rangeStart, rangeEnd, 0, 255)));
-    }
-
-    private double map(double number, double fromRangeStart, double fromRangeEnd, double toRangeStart, double toRangeEnd) {
-        return (number - fromRangeStart)/(fromRangeEnd - fromRangeStart) * (toRangeEnd - toRangeStart) + toRangeStart;
     }
 
     private void setAnimationSpeedSeekBarListener(DeviceCardViewHolder holder, int position) {
@@ -276,6 +283,7 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
 
                 @Override
                 public void onSuccess(Integer value) {
+                    holder.colorPicker.setOldCenterColor(value);
                     holder.colorPicker.setColor(value);
                 }
 
