@@ -58,10 +58,8 @@
 
             <TableLayout
                 android:id="@+id/deviceControlTableLayout"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
                 card_view:layout_constraintEnd_toEndOf="parent"
                 card_view:layout_constraintStart_toStartOf="parent"
                 card_view:layout_constraintTop_toBottomOf="@+id/deviceNameTableRow">
@@ -71,6 +69,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_marginStart="8dp"
+                    android:gravity="center_horizontal"
                     card_view:layout_constraintStart_toStartOf="parent"
                     card_view:layout_constraintTop_toBottomOf="@+id/deviceNameTableRow">
 
@@ -82,48 +81,53 @@
                         card_view:layout_constraintEnd_toEndOf="parent"
                         card_view:layout_constraintTop_toBottomOf="parent" />
 
-                </TableRow>
-
-                <TableRow
-                    android:id="@+id/BrightnessTableRow"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    card_view:layout_constraintStart_toStartOf="parent"
-                    card_view:layout_constraintTop_toBottomOf="@+id/colorPickerTableRow">
-
                     <com.larswerkman.holocolorpicker.ValueBar
                         android:id="@+id/valuebar"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         card_view:layout_constraintStart_toStartOf="parent"
                         tools:layout_editor_absoluteY="71dp" />
+
                 </TableRow>
 
                 <TableRow
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal">
 
                     <android.support.constraint.ConstraintLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent">
 
                         <ImageButton
-                            android:id="@+id/nextAnimationButton"
+                            android:id="@+id/pasteColorButton"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="16dp"
-                            android:layout_marginTop="8dp"
-                            card_view:layout_constraintStart_toEndOf="@+id/previousAnimationButton"
+                            android:layout_marginStart="8dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:srcCompat="@drawable/ic_content_paste_black_24dp"
+                            card_view:layout_constraintStart_toEndOf="@+id/copyColorButton"
                             card_view:layout_constraintTop_toTopOf="parent"
-                            card_view:srcCompat="@drawable/ic_arrow_upward_black_24dp" />
+                            tools:srcCompat="@drawable/ic_content_paste_black_24dp" />
+
+                        <ImageButton
+                            android:id="@+id/copyColorButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:srcCompat="@drawable/ic_content_copy_black_24dp"
+                            card_view:layout_constraintTop_toTopOf="parent"
+                            tools:srcCompat="@drawable/ic_content_copy_black_24dp" />
 
                         <ImageButton
                             android:id="@+id/toggleAudioReactiveButton"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="24dp"
-                            android:layout_marginTop="8dp"
-                            card_view:layout_constraintStart_toStartOf="parent"
+                            android:layout_marginStart="8dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            card_view:layout_constraintStart_toEndOf="@+id/pasteColorButton"
                             card_view:layout_constraintTop_toTopOf="parent"
                             card_view:srcCompat="@drawable/ic_volume_up_black_24dp" />
 
@@ -131,18 +135,28 @@
                             android:id="@+id/cycleFrequencyButton"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="16dp"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginStart="8dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
                             card_view:layout_constraintStart_toEndOf="@+id/toggleAudioReactiveButton"
                             card_view:layout_constraintTop_toTopOf="parent"
                             card_view:srcCompat="@drawable/ic_leak_add_black_24dp" />
 
                         <ImageButton
+                            android:id="@+id/nextAnimationButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            card_view:layout_constraintStart_toEndOf="@+id/previousAnimationButton"
+                            card_view:layout_constraintTop_toTopOf="parent"
+                            card_view:srcCompat="@drawable/ic_arrow_upward_black_24dp" />
+
+                        <ImageButton
                             android:id="@+id/previousAnimationButton"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="16dp"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginStart="8dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
                             card_view:layout_constraintStart_toEndOf="@+id/cycleFrequencyButton"
                             card_view:layout_constraintTop_toTopOf="parent"
                             card_view:srcCompat="@drawable/ic_arrow_downward_black_24dp" />

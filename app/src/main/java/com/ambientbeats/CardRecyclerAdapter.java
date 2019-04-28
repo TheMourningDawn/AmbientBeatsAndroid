@@ -33,6 +33,7 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
     private List<ParticleDevice> particleDevices;
     private ParticleCloud particleCloud = new ParticleCloud();
     private boolean anyDeviceOn = false;
+    private int colorClipboard = -1;
 
     public static class DeviceCardViewHolder extends RecyclerView.ViewHolder {
         CardView deviceCardView;
@@ -52,6 +53,9 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
         public ImageButton previousAnimationButton;
         public ImageButton toggleAudioReactiveButton;
         public ImageButton cycleFrequencyButton;
+        public ImageButton copyColorButton;
+        public ImageButton pasteColorButton;
+
 
         public Button resetButton;
         public Button enterSafeModeButton;
@@ -82,6 +86,9 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
             previousAnimationButton = v.findViewById(R.id.previousAnimationButton);
             toggleAudioReactiveButton = v.findViewById(R.id.toggleAudioReactiveButton);
             cycleFrequencyButton = v.findViewById(R.id.cycleFrequencyButton);
+            copyColorButton = v.findViewById(R.id.copyColorButton);
+            pasteColorButton = v.findViewById(R.id.pasteColorButton);
+
             resetButton = v.findViewById(R.id.resetButton);
             enterSafeModeButton = v.findViewById(R.id.enterSafeModeButton);
 
@@ -390,6 +397,18 @@ public class CardRecyclerAdapter extends RecyclerView.Adapter<CardRecyclerAdapte
         holder.enterSafeModeButton.setOnClickListener(v ->
                 particleCloud.callCloudFunction(particleDevice, "enter-safe-mode", null)
         );
+
+        holder.copyColorButton.setOnClickListener(v ->
+                colorClipboard = holder.colorPicker.getColor()
+        );
+
+        holder.pasteColorButton.setOnClickListener(v -> {
+            if(colorClipboard != -1) {
+                holder.previousColor = holder.colorPicker.getColor();
+                holder.colorPicker.setColor(colorClipboard);
+                updateDeviceColor(colorClipboard, holder, position);
+            }
+        });
     }
 
     private void setPowerSwitchListener(DeviceCardViewHolder holder, int position) {
