@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Switch;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import io.particle.android.sdk.cloud.ParticleCloud;
@@ -121,6 +122,12 @@ public class MainActivity extends AppCompatActivity {
 
                     particleDevices.add(device);
                 }
+
+                particleDevices.sort(new Comparator<ParticleDevice>() {
+                    public int compare(ParticleDevice o1, ParticleDevice o2) {
+                        return o1.getName().compareTo(o2.getName());
+                    }
+                });
 
                 recyclerView = findViewById(R.id.recycler_view);
 
